@@ -1,5 +1,6 @@
 package io.security.corespringsecurity.security.configs;
 
+import io.security.corespringsecurity.security.handler.CustomAccessDeniedHandler;
 import io.security.corespringsecurity.security.provider.CustomAuthenticationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,12 +107,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
         http
                 .exceptionHandling()
-                .accessDeniedHandler(new AccessDeniedHandler() {
-                    @Override
-                    public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AccessDeniedException e) throws IOException, ServletException {
-                        httpServletResponse.sendRedirect("/logout");
-                    }
-                });
+                .accessDeniedHandler(accessDeniedHandler());
 
     }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        CustomAccessDeniedHandler accessDeniedHandler = new CustomAccessDeniedHandler();
+        accessDeniedHandler.setErrorPage("/denied");
+
+        return accessDeniedHandler;
+    }
+
+
 }
