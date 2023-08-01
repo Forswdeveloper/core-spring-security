@@ -1,41 +1,42 @@
 package io.security.corespringsecurity.security.handler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.DefaultRedirectStrategy;
-import org.springframework.security.web.RedirectStrategy;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.security.web.savedrequest.RequestCache;
-import org.springframework.stereotype.Component;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Component
-public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+public class AjaxAutenticationFailureHandler implements AuthenticationFailureHandler {
+
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        String errorMessage = "";
+        String errMsg  = "Invalid Username or password";
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         if (exception instanceof BadCredentialsException) {
-            errorMessage = "Invalid UserName OR Password";
+            errMsg = "Invalid UserName OR Password";
         } else if(exception instanceof DisabledException){
-            errorMessage = "Locked";
+            errMsg = "Locked";
         } else if(exception instanceof InsufficientAuthenticationException){
-            errorMessage = "Verifing Failed";
+            errMsg = "Verifing Failed";
         } else if(exception instanceof CredentialsExpiredException){
-            errorMessage = "Expired password";
+            errMsg = "Expired password";
         }
 
-        //설정한 url을 전체경로로 포함하여 보기 때문에 설정한 값 전체를 config에 경로 설정을 해줘야 한다.
-        setDefaultFailureUrl("/login?error=true&exception=" + errorMessage);
+        objectMapper.writeValue(response.getWriter(), errMsg);
 
-        super.onAuthenticationFailure(request,response,exception);
     }
 }
